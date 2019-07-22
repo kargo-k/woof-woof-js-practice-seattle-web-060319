@@ -2,22 +2,36 @@ const url = 'http://localhost:3000/pups';
 
 
 document.addEventListener('DOMContentLoaded', function (e) {
+    fetchDogs()
+
     const filterBtn = document.getElementById('good-dog-filter')
     filterBtn.addEventListener('click', function (e) {
+        document.getElementById('dog-bar').innerHTML = ""
         let flag = (filterBtn.innerText === "Filter good dogs: ON")
         filterText(!flag)
-        if (flag === true) {
-
+        if (!flag === true) {
+            fetchGoodDogs()
         } else {
-
+            fetchDogs()
         }
     })
 })
 
-function fetchDogs(ev) {
+function fetchDogs() {
     const allDogs = fetch(url)
         .then(resp => resp.json())
         .then(renderDogs)
+}
+
+function fetchGoodDogs() {
+    const allDogs = fetch(url)
+        .then(resp => resp.json())
+        .then(allDogs => {
+            let goodDogs = allDogs.filter(function (dog) {
+                return dog.isGoodDog === true
+            })
+            renderDogs(goodDogs)
+        })
 }
 
 function renderDogs(json) {
@@ -35,23 +49,26 @@ function renderDogs(json) {
 };
 
 function showDog(dog) {
-    let img = document.getElementById('dog-img')
+    let divDog = document.getElementById('dog-info')
+    divDog.innerHTML = ""
+    let img = document.createElement('img')
     img.setAttribute('src', dog.image)
+    divDog.appendChild(img)
 
-    let h2 = document.getElementById('dog-name')
+    let h2 = document.createElement('h2')
     h2.innerText = dog.name
+    divDog.appendChild(h2)
 
-    let btn = document.getElementById("isGoodDog")
-    btn.style.display = "block"
+    let btn = document.createElement("button")
+    btn.id = "dogbutton"
     btnText(btn, dog.isGoodDog)
-
+    divDog.appendChild(btn)
     btn.addEventListener('click', function (e) {
         toggleGoodBad(dog)
     })
 }
 
 function toggleGoodBad(dog) {
-    console.log('before click')
     return fetch(url + `/${dog.id}`, {
         method: 'PUT',
         headers: {
@@ -66,9 +83,8 @@ function toggleGoodBad(dog) {
         })
     })
         .then(resp => resp.json())
-        .then((json) => {
-            showDog(json)
-            console.log('after click')
+        .then((dogJson) => {
+            showDog(dogJson)
         })
 }
 
